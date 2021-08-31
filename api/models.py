@@ -4,15 +4,19 @@ from django.contrib.auth.models import AbstractBaseUser, UserManager, Permission
 from django.contrib.auth.validators import ASCIIUsernameValidator
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+import pathlib
+from pathlib import Path
 
 
 def upload_avatar_path(instance, filename):
-    ext = filename.split('.')[-1]
-    return '/'.join(['avatars', str(instance.id)+str(instance.username)+str(".")+str(ext)])
+    ext = Path(str(filename)).suffix
+    path = pathlib.Path('avatars/')
+    file_url = str(path.joinpath(str(instance.uuid), str(instance.username))) + ext
+    return file_url
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
+    uuid = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
     username_validator = ASCIIUsernameValidator() 
     username = models.CharField(
       _('username'),
@@ -36,7 +40,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email']
 
     class Meta:
       verbose_name = _('user')

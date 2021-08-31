@@ -17,39 +17,51 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class FollowUsers(APIView):
     """フォローする"""
-    def post(self, request, id):
+    def post(self, request, uuid):
+      try:
         user = request.user
-        user_to_follow = models.User.objects.get(id=id)
+        user_to_follow = models.User.objects.get(id=uuid)
         user.following.add(user_to_follow)
         user_to_follow.followees.add(user)
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_201_CREATED)
+      except models.User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class UnfollowUsers(APIView):
     """フォロー解除する"""
-    def post(self, request, id):
+    def post(self, request, uuid):
+      try:
         user = request.user
-        user_to_follow = models.User.objects.get(id=id)
+        user_to_follow = models.User.objects.get(id=uuid)
         user.following.remove(user_to_follow)
         user_to_follow.followees.remove(user)
         return Response(status=status.HTTP_204_NO_CONTENT)
+      except models.User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class UserFollwees(APIView):
     """フォロワー一覧"""
     def get(self, request, username):
+      try:
         found_user = models.User.objects.get(username=username)
-        follow_user = found_user.followees.all()
-        serializer = serializers.ListUserSerializer(follow_user, many=True, context={"request": request})
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
+      except models.User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+      follow_user = found_user.followees.all()
+      serializer = serializers.ListUserSerializer(follow_user, many=True, context={"request": request})
+      return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
 class UserFollowing(APIView):
     """フォロー一覧"""
     def get(self, request, username):
+      try:
         found_user = models.User.objects.get(username=username)
-        following_user = found_user.following.all()
-        serializer = serializers.ListUserSerializer(following_user, many=True, context={"request": request})
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
+      except models.User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+      following_user = found_user.following.all()
+      serializer = serializers.ListUserSerializer(following_user, many=True, context={"request": request})
+      return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 

@@ -9,8 +9,8 @@ router.register('users',views.UserViewSet)
 urlpatterns = [
     path('',include(router.urls)),
     path('register/', views.CreateUserView.as_view(), name='register'),
-    path("<uuid:id>/follow/", view=views.FollowUsers.as_view(), name="follow_users"),
-    path("<uuid:id>/unfollow/", view=views.UnfollowUsers.as_view(), name="unfollow_users"),
+    path("<uuid:uuid>/follow/", view=views.FollowUsers.as_view(), name="follow_users"),
+    path("<uuid:uuid>/unfollow/", view=views.UnfollowUsers.as_view(), name="unfollow_users"),
     path("<username>/followees", view=views.UserFollwees.as_view(), name="user_followee"),
     path("<username>/following", view=views.UserFollowing.as_view(), name="user_following"),
 ]
