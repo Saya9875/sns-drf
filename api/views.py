@@ -1,3 +1,67 @@
-from django.shortcuts import render
+from api import serializers, models
+from rest_framework import viewsets, status, generics
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 
-# Create your views here.
+
+class CreateUserView(generics.CreateAPIView):
+    serializer_class = serializers.UserSerializer
+    permission_classes = (AllowAny,)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = models.User.objects.all()
+    serializer_class = serializers.UserSerializer
+
+
+class FollowUsers(APIView):
+    """フォローする"""
+    def post(self, request, uuid):
+      try:
+        user = request.user
+        user_to_follow = models.User.objects.get(id=uuid)
+        user.following.add(user_to_follow)
+        user_to_follow.followees.add(user)
+        return Response(status=status.HTTP_201_CREATED)
+      except models.User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+class UnfollowUsers(APIView):
+    """フォロー解除する"""
+    def post(self, request, uuid):
+      try:
+        user = request.user
+        user_to_follow = models.User.objects.get(id=uuid)
+        user.following.remove(user_to_follow)
+        user_to_follow.followees.remove(user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+      except models.User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+class UserFollwees(APIView):
+    """フォロワー一覧"""
+    def get(self, request, username):
+      try:
+        found_user = models.User.objects.get(username=username)
+      except models.User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+      follow_user = found_user.followees.all()
+      serializer = serializers.ListUserSerializer(follow_user, many=True, context={"request": request})
+      return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+class UserFollowing(APIView):
+    """フォロー一覧"""
+    def get(self, request, username):
+      try:
+        found_user = models.User.objects.get(username=username)
+      except models.User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+      following_user = found_user.following.all()
+      serializer = serializers.ListUserSerializer(following_user, many=True, context={"request": request})
+      return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
